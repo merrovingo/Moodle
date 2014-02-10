@@ -18,7 +18,7 @@ case $respuesta in
 	echo "Clonando el repositorio de Git..."
 	sleep 2
 	git clone https://github.com/moodle/moodle.git
-	cd moodle
+	# Falta seleccionar rama estable #
 	echo "Creando moodledata..."
 	mkdir /var/moodledata
 	chmod 777 /var/moodledata

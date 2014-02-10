@@ -12,20 +12,22 @@ case $respuesta in
 	read pass
 	echo "Instalando mysql server..."
 	sleep 1
-	apt-get install -q -y mysql-server
+	export DEBIAN_FRONTEND=noninteractive
+	export pass
+	apt-get install -y -q mysql-server
+	mysqladmin -u root password $pass
 	echo "A continuacion crearemos un usuario mysql para moodle"
 	echo "Ingrese el nombre de usuario:"
 	read usuariodb
 	echo "Ingrese una contraseña:"
 	read passuser
-	mysql -u root -p -e "CREATE USER $usuariodb@'localhost' IDENTIFIED BY '$passuser';"
+	mysql -u root -p$pass -e "CREATE USER $usuariodb@'localhost' IDENTIFIED BY '$passuser';"
 	echo "A continuacion crearemos una bd para moodle"
 	echo "Ingrese el nombre que desea para la bd:"
 	read nombrebd
 	mysql -u root -p -e "CREATE DATABASE $nombrebd CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	mysql -u root -p -e "GRANT ALL PRIVILEGES ON $nombrebd.* TO $usuariodb@'localhost';"
 	mysql -u root -p -e "FLUSH PRIVILEGES;"
-	mysqladmin -u root password $pass
 	clear
 	echo "Instalacion terminada"
 	echo "Resumen de la instalacion:"

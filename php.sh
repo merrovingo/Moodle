@@ -16,7 +16,7 @@ case $respuesta in
 	echo "Instalacion terminada"
 	sleep 1
 	;;
-	2) echo "Lo siento debe ejecutar el script como root"
+	2) echo "Necesita ejecutar el script como root"
 	sleep 2
 	;;
 	*) echo "Opcion no valida"
