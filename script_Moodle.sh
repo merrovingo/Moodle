@@ -14,6 +14,11 @@ clear
 #		Sientase libre de modificar las siguientes variables segun sus necesidades particulares		#
 ##########################################################################################################################
 ##########################################################################################################################
+# 		Validacion de usuario 		#
+# Comprobar que el ID del usuario corresponde a root 	#
+ID_USUARIO=$(id -u)
+ID_ROOT="0"
+##########################################################################################################################
 # 		Datos del virtualhost 				#
 # Nombre del sitio
 NOMBRE_SITIO="moodle"
@@ -52,19 +57,19 @@ function script_apache(){
 	echo "Configurando el Virtualhost..."
 	cd /etc/apache/sites-available && touch $NOMBRE_SITIO
 	echo "<virtualhost *.80>" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ServerAdmin '$APACHE_MAIL'" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ServerName '$APACHE_SERVER'" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "ServerAdmin $APACHE_MAIL" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "ServerName $APACHE_SERVER" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "ServerSignature Off" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "DocumentRoot /var/www/'$CURSO'/" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "<Directory /var/www/'$CURSO'/moodle>" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "DocumentRoot /var/www/$CURSO/" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "<Directory /var/www/$CURSO/moodle>" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "Options -Indexes FollowSymLinks MultiViews" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "AllowOverride ALL" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "Order Allow, Deny" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "Allow From All" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "</Directory>" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "LogLevel warn" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ErrorLog ${APACHE_LOG_DIR}/'$APACHE_ERROR'" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "CustomLog ${APACHE_LOG_DIR}/'$APACHE_ACCESS' combined" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "</virtualhost>" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "Instalacion de Apache terminada"
 }
@@ -75,7 +80,7 @@ function script_moodle(){
 	mkdir /var/www/$CURSO
 	cd /var/www/$CURSO
 	git clone https://github.com/moodle/moodle.git
-	echo "Cambiando a la rama '$RAMA_MOODLE'"
+	echo "Cambiando a la rama $RAMA_MOODLE"
 	git branch --track $RAMA_MOODLE origin/$RAMA_MOODLE
 	echo "Creando moodledata..."
 	mkdir /var/moodledata
@@ -86,15 +91,15 @@ function script_mysql(){
 	echo "Instalando algunas cosas necesarias..."
 	apt-get install -y debconf-utils
 	echo "Instalando MySQL..."
-	echo "mysql-server mysql-server/root_password password '$PASSWORD'" > mysql.preseed
-	echo "mysql-server mysql-server/root_password_again password '$PASSWORD'" >> mysql.preseed
+	echo "mysql-server mysql-server/root_password password $PASSWORD" > mysql.preseed
+	echo "mysql-server mysql-server/root_password_again password $PASSWORD" >> mysql.preseed
 	cat mysql.preseed | debconf-set-selections
 	apt-get install -y mysql-server
 	rm mysql.preseed
 	echo "Creando un usuario y una base de datos..."
-	mysql -u root -p$PASSWORD -e "CREATE DATABASE '$BASE_MOODLE' CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
-	mysql -u root -p$PASSWORD -e "CREATE USER '$USR_MOODLE'@'localhost' IDENTIFIED BY '$PASSWORD_MOODLE';"
-	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON '$BASE_MOODLE'.* TO '$USR_MOODLE'@'localhost'; FLUSH PRIVILEGES;"
+	mysql -u root -p$PASSWORD -e "CREATE DATABASE $BASE_MOODLE CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
+	mysql -u root -p$PASSWORD -e "CREATE USER $USR_MOODLE@'localhost' IDENTIFIED BY $PASSWORD_MOODLE;"
+	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO $USR_MOODLE@'localhost'; FLUSH PRIVILEGES;"
 	echo "Instalacion de MySQL terminada"
 }
 function script_php(){
@@ -109,18 +114,21 @@ function script_php(){
 #		Main						#
 ###########################################################################################################################
 ###########################################################################################################################
-echo "Script para la instalacion de Moodle"
+echo "Bienvenido al Script para la instalacion de Moodle"
+echo "----------------------------------------------------"
 echo "El siguiente script necesita ser ejecutado como root"
-echo "Por favor autentifiquese..."
-su
-if [[ '$USERNAME' = "root" ]]; then
+echo "Comprobando..."
+if test "$ID_USUARIO" = "$ID_ROOT"
+then
+	echo "Todo correcto, la instalacion comenzara ahora..."
 	script_apache
 	script_php
 	script_mysql
 	script_moodle
 	echo "Instalacion terminada"
+	exit 0
 else
-	echo "Para realizar la instalacion de Moodle se necesitan realizar operaciones"
-	echo "que requieren permisos de root, por favor intentelo nuevamente"
-	sh script_Moodle.sh
+	echo "Para realizar la instalacion de Moodle se necesitan permisos de root"
+	echo "Por favor intentelo nuevamente con el siguiente comando # su -c 'script_Moodle.sh'"
+	exit 1
 fi
