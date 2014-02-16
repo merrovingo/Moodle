@@ -121,14 +121,15 @@ echo "Comprobando..."
 if test "$ID_USUARIO" = "$ID_ROOT"
 then
 	echo "Todo correcto, la instalacion comenzara ahora..."
-	script_apache
-	script_php
-	script_mysql
-	script_moodle
+	script_apache()	| tee -a script_moodle.log
+	script_php()	| tee -a script_moodle.log
+	script_mysql() 	| tee -a script_moodle.log
+	script_moodle()	| tee -a script_moodle.log
 	echo "Instalacion terminada"
+	echo "El nombre del archivo de logs es: script_moodle.log"
 	exit 0
 else
 	echo "Para realizar la instalacion de Moodle se necesitan permisos de root"
-	echo "Por favor intentelo nuevamente con el siguiente comando # su -c 'script_Moodle.sh'"
+	echo "Por favor intentelo nuevamente con el siguiente comando ##su -c 'script_Moodle.sh'##"
 	exit 1
 fi
