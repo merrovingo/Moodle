@@ -73,6 +73,12 @@ script_apache () {
 	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "</virtualhost>" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	echo "Activando el virtualhost..."
+	sleep 3
+	a2ensite $NOMBRE_SITIO
+	echo "Reiniciando Apache..."
+	sleep 3
+	/etc/init.d/apache2 restart
 	echo "Instalacion de Apache terminada"
 	sleep 5
 }
