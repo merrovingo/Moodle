@@ -51,7 +51,7 @@ PASSWORD_MOODLE="usuario_secreto"
 #		Definicion de funciones		#
 ############################################################################################################################
 ############################################################################################################################
-function script_apache(){
+script_apache () {
 	echo "Instalando Apache..."
 	apt-get install -y libapache2-mod-php5
 	echo "Configurando el Virtualhost..."
@@ -73,7 +73,7 @@ function script_apache(){
 	echo "</virtualhost>" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "Instalacion de Apache terminada"
 }
-function script_moodle(){
+script_moodle () {
 	echo "Instalando Git..."
 	apt-get install -y git
 	echo "Clonando Moodle este proceso puede tardar un poco..."
@@ -87,7 +87,7 @@ function script_moodle(){
 	chmod 777 /var/moodledata
 	echo "Instalacion de Moodle terminada"
 }
-function script_mysql(){
+script_mysql () {
 	echo "Instalando algunas cosas necesarias..."
 	apt-get install -y debconf-utils
 	echo "Instalando MySQL..."
@@ -102,7 +102,7 @@ function script_mysql(){
 	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO $USR_MOODLE@'localhost'; FLUSH PRIVILEGES;"
 	echo "Instalacion de MySQL terminada"
 }
-function script_php(){
+script_php () {
 	echo "Instalando PHP..."
 	apt-get install -y \
 	php-pear php5 php5-mysql php5-curl php5-gd php5-gmp \
@@ -121,10 +121,10 @@ echo "Comprobando..."
 if test "$ID_USUARIO" = "$ID_ROOT"
 then
 	echo "Todo correcto, la instalacion comenzara ahora..."
-	script_apache()	| tee -a script_moodle.log
-	script_php()	| tee -a script_moodle.log
-	script_mysql() 	| tee -a script_moodle.log
-	script_moodle()	| tee -a script_moodle.log
+	script_apache	| tee -a script_moodle.log
+	script_php		| tee -a script_moodle.log
+	script_mysql 	| tee -a script_moodle.log
+	script_moodle	| tee -a script_moodle.log
 	echo "Instalacion terminada"
 	echo "El nombre del archivo de logs es: script_moodle.log"
 	exit 0
