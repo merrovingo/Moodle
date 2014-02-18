@@ -73,6 +73,10 @@ script_apache () {
 	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache/sites-available/$NOMBRE_SITIO
 	echo "</virtualhost>" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	#
+	# bug 01
+	# No existe la ruta /etc/apache/sites-available no se crea el virtualhost
+	#
 	echo "Activando el virtualhost..."
 	sleep 3
 	a2ensite $NOMBRE_SITIO
@@ -94,6 +98,10 @@ script_moodle () {
 	echo "Cambiando a la rama $RAMA_MOODLE"
 	sleep 3
 	git branch --track $RAMA_MOODLE origin/$RAMA_MOODLE
+	#
+	# bug 02
+	# No selecciona la rama de moodle
+	#
 	echo "Creando moodledata..."
 	sleep 3
 	mkdir /var/moodledata
@@ -116,6 +124,10 @@ script_mysql () {
 	sleep 3
 	mysql -u root -p$PASSWORD -e "CREATE DATABASE $BASE_MOODLE CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	mysql -u root -p$PASSWORD -e "CREATE USER $USR_MOODLE@'localhost' IDENTIFIED BY $PASSWORD_MOODLE;"
+	#
+	# bug 03
+	# Se crea el usuario pero no el password
+	#
 	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO $USR_MOODLE@'localhost'; FLUSH PRIVILEGES;"
 	echo "Instalacion de MySQL terminada"
 	sleep 5
@@ -141,8 +153,8 @@ echo "Comprobando identidad..."
 if test "$ID_USUARIO" = "$ID_ROOT"
 then
 	echo "Todo correcto, la instalacion comenzara ahora..."
-	script_apache	| tee -a script_moodle.log
-	script_php		| tee -a script_moodle.log
+	script_apache	| tee -a script_moodle.log 		# bug 04
+	script_php		| tee -a script_moodle.log 		# Se almacena la salida estandar pero no el error
 	script_mysql 	| tee -a script_moodle.log
 	script_moodle	| tee -a script_moodle.log
 	echo "Instalacion terminada"
