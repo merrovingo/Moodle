@@ -57,25 +57,27 @@ script_apache () {
 	apt-get install -y libapache2-mod-php5
 	echo "Configurando el Virtualhost..."
 	sleep 3
-	cd /etc/apache/sites-available && touch $NOMBRE_SITIO
-	echo "<virtualhost *.80>" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ServerAdmin $APACHE_MAIL" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ServerName $APACHE_SERVER" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ServerSignature Off" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "DocumentRoot /var/www/$CURSO/" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "<Directory /var/www/$CURSO/moodle>" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "Options -Indexes FollowSymLinks MultiViews" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "AllowOverride ALL" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "Order Allow, Deny" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "Allow From All" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "</Directory>" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "LogLevel warn" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache/sites-available/$NOMBRE_SITIO
-	echo "</virtualhost>" >> /etc/apache/sites-available/$NOMBRE_SITIO
+	mkdir /var/www/$CURSO
+	cd /etc/apache2/sites-available && touch $NOMBRE_SITIO
+	echo "<virtualhost *.80>" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "ServerAdmin $APACHE_MAIL" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "ServerName $APACHE_SERVER" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "ServerSignature Off" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "DocumentRoot /var/www/$CURSO/" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "<Directory /var/www/$CURSO/moodle>" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "Options -Indexes FollowSymLinks MultiViews" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "AllowOverride ALL" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "Order Allow, Deny" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "Allow From All" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "</Directory>" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "LogLevel warn" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache2/sites-available/$NOMBRE_SITIO
+	echo "</virtualhost>" >> /etc/apache2/sites-available/$NOMBRE_SITIO
 	#
 	# bug 01
 	# No existe la ruta /etc/apache/sites-available no se crea el virtualhost
+	# Correcion: la ruta es /etc/apache2/sites-available
 	#
 	echo "Activando el virtualhost..."
 	sleep 3
@@ -92,15 +94,16 @@ script_moodle () {
 	apt-get install -y git
 	echo "Clonando Moodle este proceso puede tardar un poco..."
 	sleep 3
-	mkdir /var/www/$CURSO
 	cd /var/www/$CURSO
 	git clone https://github.com/moodle/moodle.git
 	echo "Cambiando a la rama $RAMA_MOODLE"
 	sleep 3
+	cd /var/www/$CURSO/moodle
 	git branch --track $RAMA_MOODLE origin/$RAMA_MOODLE
 	#
 	# bug 02
 	# No selecciona la rama de moodle
+	# Correcion: Falto cambiar a la carpeta Moodle antes de seleccionar la rama
 	#
 	echo "Creando moodledata..."
 	sleep 3
@@ -123,10 +126,11 @@ script_mysql () {
 	echo "Creando un usuario y una base de datos..."
 	sleep 3
 	mysql -u root -p$PASSWORD -e "CREATE DATABASE $BASE_MOODLE CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
-	mysql -u root -p$PASSWORD -e "CREATE USER $USR_MOODLE@'localhost' IDENTIFIED BY $PASSWORD_MOODLE;"
+	mysql -u root -p$PASSWORD -e "CREATE USER $USR_MOODLE@'localhost' IDENTIFIED BY '$PASSWORD_MOODLE';"
 	#
 	# bug 03
 	# Se crea el usuario pero no el password
+	# Correcion: Falto el uso de comilla simple para la contraseña
 	#
 	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO $USR_MOODLE@'localhost'; FLUSH PRIVILEGES;"
 	echo "Instalacion de MySQL terminada"
@@ -153,10 +157,10 @@ echo "Comprobando identidad..."
 if test "$ID_USUARIO" = "$ID_ROOT"
 then
 	echo "Todo correcto, la instalacion comenzara ahora..."
-	script_apache	| tee -a script_moodle.log 		# bug 04
-	script_php		| tee -a script_moodle.log 		# Se almacena la salida estandar pero no el error
-	script_mysql 	| tee -a script_moodle.log
-	script_moodle	| tee -a script_moodle.log
+	script_apache 2>&1	| tee -a script_moodle.log 		# bug 04
+	script_php 2>&1		| tee -a script_moodle.log 		# Se almacena la salida estandar pero no el error
+	script_mysql 2>&1 	| tee -a script_moodle.log 		# Correcion: Se almacena el error y la salida en un archivo
+	script_moodle 2>&1	| tee -a script_moodle.log 		#
 	echo "Instalacion terminada"
 	echo "El nombre del archivo de logs es: script_moodle.log"
 	exit 0
