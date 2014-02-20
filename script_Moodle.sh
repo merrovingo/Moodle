@@ -42,10 +42,6 @@ RAMA_MOODLE="MOODLE_26_STABLE"
 PASSWORD="moodle_secreto"
 # Nombre de la base de datos para Moodle
 BASE_MOODLE="moodle"
-# Nombre de usuario MYSQL para Moodle
-USR_MOODLE="usr_moodle"
-# Contraseña para el usuario de MySQL de Moodle
-PASSWORD_MOODLE="usuario_secreto"
 ############################################################################################################################
 ############################################################################################################################
 #		Definicion de funciones		#
@@ -74,11 +70,6 @@ script_apache () {
 	echo "ErrorLog ${APACHE_LOG_DIR}/$APACHE_ERROR" >> /etc/apache2/sites-available/$NOMBRE_SITIO
 	echo "CustomLog ${APACHE_LOG_DIR}/$APACHE_ACCESS combined" >> /etc/apache2/sites-available/$NOMBRE_SITIO
 	echo "</virtualhost>" >> /etc/apache2/sites-available/$NOMBRE_SITIO
-	#
-	# bug 01
-	# No existe la ruta /etc/apache/sites-available no se crea el virtualhost
-	# Correcion: la ruta es /etc/apache2/sites-available
-	#
 	echo "Activando el virtualhost..."
 	sleep 3
 	a2ensite $NOMBRE_SITIO
@@ -100,11 +91,6 @@ script_moodle () {
 	sleep 3
 	cd /var/www/$CURSO/moodle
 	git branch --track $RAMA_MOODLE origin/$RAMA_MOODLE
-	#
-	# bug 02
-	# No selecciona la rama de moodle
-	# Correcion: Falto cambiar a la carpeta Moodle antes de seleccionar la rama
-	#
 	echo "Creando moodledata..."
 	sleep 3
 	mkdir /var/moodledata
@@ -126,13 +112,8 @@ script_mysql () {
 	echo "Creando un usuario y una base de datos..."
 	sleep 3
 	mysql -u root -p$PASSWORD -e "CREATE DATABASE $BASE_MOODLE CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
-	mysql -u root -p$PASSWORD -e "CREATE USER $USR_MOODLE@'localhost' IDENTIFIED BY '$PASSWORD_MOODLE';"
-	#
-	# bug 03
-	# Se crea el usuario pero no el password
-	# Correcion: Falto el uso de comilla simple para la contraseña
-	#
-	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO $USR_MOODLE@'localhost'; FLUSH PRIVILEGES;"
+	mysql -u root -p$PASSWORD -e "CREATE USER usuario_moodle@'localhost' IDENTIFIED BY 'secreto';"
+	mysql -u root -p$PASSWORD -e "GRANT ALL PRIVILEGES ON $BASE_MOODLE.* TO usuario_moodle@'localhost'; FLUSH PRIVILEGES;"
 	echo "Instalacion de MySQL terminada"
 	sleep 5
 }
@@ -157,10 +138,10 @@ echo "Comprobando identidad..."
 if test "$ID_USUARIO" = "$ID_ROOT"
 then
 	echo "Todo correcto, la instalacion comenzara ahora..."
-	script_apache 2>&1	| tee -a script_moodle.log 		# bug 04
-	script_php 2>&1		| tee -a script_moodle.log 		# Se almacena la salida estandar pero no el error
-	script_mysql 2>&1 	| tee -a script_moodle.log 		# Correcion: Se almacena el error y la salida en un archivo
-	script_moodle 2>&1	| tee -a script_moodle.log 		#
+	script_apache 2>&1	| tee -a script_moodle.log
+	script_php 2>&1		| tee -a script_moodle.log
+	script_mysql 2>&1 	| tee -a script_moodle.log
+	script_moodle 2>&1	| tee -a script_moodle.log
 	echo "Instalacion terminada"
 	echo "El nombre del archivo de logs es: script_moodle.log"
 	exit 0
